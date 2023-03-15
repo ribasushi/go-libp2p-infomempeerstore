@@ -9,6 +9,7 @@ import (
 
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/peerstore"
+	"github.com/libp2p/go-libp2p/core/protocol"
 	"github.com/libp2p/go-libp2p/core/record"
 	"github.com/libp2p/go-libp2p/p2p/host/peerstore/pstoremem"
 )
@@ -75,7 +76,7 @@ func (ps *PeerStore) Put(p peer.ID, key string, val interface{}) error { //nolin
 	return nil
 }
 
-func (ps *PeerStore) SetProtocols(p peer.ID, protos ...string) error { //nolint:revive
+func (ps *PeerStore) SetProtocols(p peer.ID, protos ...protocol.ID) error { //nolint:revive
 	ps.mu.Lock()
 	defer ps.mu.Unlock()
 	if err := ps.Peerstore.SetProtocols(p, protos...); err != nil {
@@ -83,11 +84,11 @@ func (ps *PeerStore) SetProtocols(p peer.ID, protos ...string) error { //nolint:
 	}
 	ps.peerProtos[p] = make(map[string]struct{}) // always reset
 	for _, pr := range protos {
-		ps.peerProtos[p][pr] = struct{}{}
+		ps.peerProtos[p][string(pr)] = struct{}{}
 	}
 	return nil
 }
-func (ps *PeerStore) AddProtocols(p peer.ID, protos ...string) error { //nolint:revive
+func (ps *PeerStore) AddProtocols(p peer.ID, protos ...protocol.ID) error { //nolint:revive
 	ps.mu.Lock()
 	defer ps.mu.Unlock()
 	if err := ps.Peerstore.AddProtocols(p, protos...); err != nil {
@@ -97,11 +98,11 @@ func (ps *PeerStore) AddProtocols(p peer.ID, protos ...string) error { //nolint:
 		ps.peerProtos[p] = make(map[string]struct{})
 	}
 	for _, pr := range protos {
-		ps.peerProtos[p][pr] = struct{}{}
+		ps.peerProtos[p][string(pr)] = struct{}{}
 	}
 	return nil
 }
-func (ps *PeerStore) RemoveProtocols(p peer.ID, protos ...string) error { //nolint:revive
+func (ps *PeerStore) RemoveProtocols(p peer.ID, protos ...protocol.ID) error { //nolint:revive
 	ps.mu.Lock()
 	defer ps.mu.Unlock()
 	if err := ps.Peerstore.RemoveProtocols(p, protos...); err != nil {
@@ -109,7 +110,7 @@ func (ps *PeerStore) RemoveProtocols(p peer.ID, protos ...string) error { //noli
 	}
 	if ps.peerProtos[p] != nil {
 		for _, pr := range protos {
-			delete(ps.peerProtos[p], pr)
+			delete(ps.peerProtos[p], string(pr))
 		}
 	}
 	return nil
